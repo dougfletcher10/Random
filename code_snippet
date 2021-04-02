@@ -1,0 +1,25 @@
+scorer = rouge_scorer.RougeScorer(['rougeL'], use_stemmer=True)
+sents_splits = re.split('[;.\n] ',test_text)
+
+scores = []
+sentences=[]
+for i in sents_splits:
+    score = scorer.score(i,test_text)
+    score = score['rougeL'][2]
+    scores.append(score)
+    sentences.append(i)
+
+token_length = len(tokenizer(test_text).input_ids)
+tmp = pd.DataFrame(zip(sentences,scores),columns=['sentences','scores'])
+tmp = tmp.sort_values('scores',ascending=False)
+tmp=tmp.reset_index(drop=True)
+new=None
+
+while token_length >512:
+    
+    ind = list(tmp.index)[-1]
+    tmp=tmp.drop(index=ind,axis=0)
+    tmp=tmp.reset_index(drop=True)
+    
+    new = tmp.sentences.str.cat(sep='.')
+    token_length=len(tokenizer(new).input_ids)
